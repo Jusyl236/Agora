@@ -10,6 +10,9 @@ from typing import List
 import uuid
 from datetime import datetime, timezone
 
+# Import Café Virtuel routes
+from routes.cafe_routes import router as cafe_router, init_services
+
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -19,8 +22,11 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# Initialize Café Virtuel services
+init_services(db)
+
 # Create the main app without a prefix
-app = FastAPI()
+app = FastAPI(title="Café Virtuel API", version="1.0.0")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")

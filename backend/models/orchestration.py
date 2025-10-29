@@ -4,7 +4,7 @@ Modèles pour l'orchestration intelligente
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 from datetime import datetime
-from .session import Mem4RistorState, CafeType
+from models.session import Mem4RistorState, CafeType
 
 
 class OrchestrationSuggestion(BaseModel):

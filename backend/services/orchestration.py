@@ -5,11 +5,11 @@ Gère les modes Barman, Pilote et Sommelier
 import re
 from typing import List, Optional, Dict, Tuple
 from datetime import datetime
-from ..models.session import (
+from models.session import (
     Message, MessageFormat, Session, AIParticipant,
     Mem4RistorState, CafeType, OrchestrationMode
 )
-from ..models.orchestration import (
+from models.orchestration import (
     OrchestrationSuggestion, QuestionDetection, 
     StateTransition, ConversationFlow
 )

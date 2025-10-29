@@ -4,8 +4,8 @@ Service de gestion des sessions
 from typing import List, Optional, Dict
 from datetime import datetime, timedelta
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from ..models.session import Session, SessionConfig, Message, AIParticipant
-from ..models.orchestration import SessionStatistics, ConversationFlow
+from models.session import Session, SessionConfig, Message, AIParticipant
+from models.orchestration import SessionStatistics, ConversationFlow
 
 
 class SessionService:

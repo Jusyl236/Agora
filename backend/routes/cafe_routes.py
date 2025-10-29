@@ -6,11 +6,11 @@ from typing import List, Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel
 
-from ..models.session import Session, SessionConfig, Message, AIParticipant, MessageFormat
-from ..models.orchestration import OrchestrationSuggestion, SessionStatistics
-from ..services.session_service import SessionService
-from ..services.orchestration import OrchestrationService
-from ..services.export_service import ExportService
+from models.session import Session, SessionConfig, Message, AIParticipant, MessageFormat
+from models.orchestration import OrchestrationSuggestion, SessionStatistics
+from services.session_service import SessionService
+from services.orchestration import OrchestrationService
+from services.export_service import ExportService
 
 
 router = APIRouter(prefix="/api/cafe", tags=["cafe_virtuel"])

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Café Virtuel</title>
+  <style>
+    body {
+      width: 300px;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    h1 {
+      font-size: 20px;
+      margin: 0 0 12px 0;
+      text-align: center;
+    }
+    
+    .status {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      backdrop-filter: blur(10px);
+    }
+    
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      margin: 6px 0;
+      font-size: 13px;
+    }
+    
+    .badge {
+      background: rgba(16, 185, 129, 0.3);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    
+    .badge.offline {
+      background: rgba(239, 68, 68, 0.3);
+    }
+    
+    button {
+      width: 100%;
+      padding: 10px;
+      background: white;
+      color: #667eea;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+    
+    button:hover {
+      background: #f3f4f6;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 11px;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <h1>☕ Café Virtuel</h1>
+  
+  <div class="status">
+    <div class="status-item">
+      <span>Backend</span>
+      <span id="backend-status" class="badge offline">⏳ Vérification...</span>
+    </div>
+    <div class="status-item">
+      <span>Session active</span>
+      <span id="session-status" class="badge offline">Aucune</span>
+    </div>
+  </div>
+  
+  <button id="open-agora">🖥️ Ouvrir l'Agora</button>
+  <button id="check-status">🔄 Rafraîchir</button>
+  
+  <div class="footer">
+    <div>v2.0.0</div>
+    <div>Par Julien "Le Barman" 🎩</div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

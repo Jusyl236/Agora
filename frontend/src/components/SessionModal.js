@@ -19,6 +19,7 @@ const SessionModal = ({ isOpen, onClose }) => {
     { name: 'Perplexity', platform: 'perplexity.ai', color: '#20808d', isLocal: false },
     { name: 'QWEN', platform: 'qwen.ai', color: '#ff6b6b', isLocal: false },
     { name: 'Manus AI', platform: 'manus.ai', color: '#9b59b6', isLocal: false },
+    { name: 'Emergent E1', platform: 'emergent.sh', color: '#7c3aed', isLocal: false },
     { name: 'Local AI (Ollama)', platform: 'localhost', color: '#6c757d', isLocal: true },
   ];
 

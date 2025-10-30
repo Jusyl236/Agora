@@ -1,0 +1,63 @@
+{
+  "manifest_version": 3,
+  "name": "Café Virtuel - Extension Chrome",
+  "version": "2.0.0",
+  "description": "Orchestration intelligente de conversations entre IAs - Créé par Julien 'Le Barman' Chauvin",
+  "permissions": [
+    "tabs",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "http://localhost:8001/*",
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://claude.ai/*",
+    "https://chat.mistral.ai/*",
+    "https://x.ai/*",
+    "https://chat.deepseek.com/*",
+    "https://gemini.google.com/*",
+    "https://perplexity.ai/*",
+    "https://qwen.ai/*",
+    "https://manus.ai/*"
+  ],
+  "background": {
+    "service_worker": "service_worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+      "js": ["content_chatgpt.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://claude.ai/*"],
+      "js": ["content_claude.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://chat.mistral.ai/*",
+        "https://x.ai/*",
+        "https://chat.deepseek.com/*",
+        "https://gemini.google.com/*",
+        "https://perplexity.ai/*",
+        "https://qwen.ai/*",
+        "https://manus.ai/*"
+      ],
+      "js": ["content_generic.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Café Virtuel",
+    "default_icon": "icon.png"
+  }
+}

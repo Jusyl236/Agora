@@ -16,6 +16,7 @@ const Composer = () => {
   const [message, setMessage] = useState('');
   const [selectedCafe, setSelectedCafe] = useState('long');
   const [targetIA, setTargetIA] = useState('');
+  const [sendingBriefing, setSendingBriefing] = useState(false);
 
   const availableIAs = activeSession?.config.participants.filter(p => p.is_available) || [];
 
@@ -62,6 +63,39 @@ ${message}
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  const handleSendBriefing = async () => {
+    if (!activeSession) return;
+    
+    setSendingBriefing(true);
+    try {
+      // Récupérer les règles du backend
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/cafe/config/rules`);
+      const data = await response.json();
+      const rules = data.rules;
+      
+      // Envoyer aux IAs via extension Chrome
+      if (window.chrome && window.chrome.runtime) {
+        // Envoyer à tous les onglets IA disponibles
+        availableIAs.forEach((ia) => {
+          window.chrome.runtime.sendMessage({
+            type: "MANUAL_BRIEFING",
+            rules: rules,
+            target: ia.name
+          });
+        });
+        
+        alert('✅ Briefing envoyé à toutes les IAs disponibles !');
+      } else {
+        alert('⚠️ Extension Chrome non détectée. Assurez-vous qu\'elle est chargée.');
+      }
+    } catch (err) {
+      console.error('Erreur envoi briefing:', err);
+      alert('❌ Erreur lors de l\'envoi du briefing');
+    } finally {
+      setSendingBriefing(false);
     }
   };
 
@@ -187,6 +221,15 @@ ${message}
           🍰 Gourmand
         </button>
       </div>
+
+      {/* Bouton Briefing Manuel */}
+      <button
+        onClick={handleSendBriefing}
+        disabled={sendingBriefing || !activeSession}
+        className="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white py-2 px-4 rounded-lg font-medium hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg mb-2"
+      >
+        {sendingBriefing ? '⏳ Envoi du briefing...' : '📣 Briefer les IAs (Manuel)'}
+      </button>
 
       {/* Bouton Envoyer */}
       <button

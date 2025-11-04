@@ -1,22 +1,53 @@
-// Café Virtuel – Content Script Claude V2.0 (Backend intégré)
+// Café Virtuel – Content Script Claude V2.1 (Conversation Sticky + Briefing Manuel)
 (function () {
   const AGENT = "Claude";
   const log = (...a) => { try { console.log("[Claude CS]", ...a); } catch {} };
 
-  let briefingReceived = false;
+  let conversationUrl = null;
+
+  // Capturer l'URL de conversation
+  function captureConversationUrl() {
+    const url = window.location.href;
+    // Claude URLs: https://claude.ai/chat/abc-123-def
+    if (url.includes('/chat/')) {
+      conversationUrl = url;
+      log("📌 Conversation URL capturée:", conversationUrl);
+      return conversationUrl;
+    }
+    return null;
+  }
+
+  // Détecter changement d'URL
+  let lastUrl = window.location.href;
+  setInterval(() => {
+    if (window.location.href !== lastUrl) {
+      lastUrl = window.location.href;
+      captureConversationUrl();
+    }
+  }, 500);
 
   // HELLO au Service Worker
-  chrome.runtime.sendMessage({ type: "HELLO_IA", agent: AGENT }, (res) => {
+  chrome.runtime.sendMessage({ 
+    type: "HELLO_IA", 
+    agent: AGENT,
+    conversationUrl: captureConversationUrl()
+  }, (res) => {
     log("HELLO_IA ack:", res);
   });
 
   // Listener pour messages entrants
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     
-    // === Briefing automatique ===
-    if (msg?.type === "BRIEFING" && msg.rules && !briefingReceived) {
-      log("📣 Briefing reçu, injection dans Claude...");
-      briefingReceived = true;
+    // === Briefing MANUEL ===
+    if (msg?.type === "MANUAL_BRIEFING" && msg.rules) {
+      log("📣 Briefing manuel reçu, injection dans Claude...");
+      
+      const currentUrl = captureConversationUrl();
+      if (!currentUrl) {
+        log("⚠️ Pas de conversation active détectée");
+        sendResponse?.({ ok: false, error: "No active conversation" });
+        return true;
+      }
       
       const ta = document.querySelector('div[contenteditable="true"], textarea');
       if (ta) {

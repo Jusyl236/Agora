@@ -1,14 +1,42 @@
-// Café Virtuel – Content Script ChatGPT V2.0 (Backend intégré)
+// Café Virtuel – Content Script ChatGPT V2.1 (Conversation Sticky + Briefing Manuel)
 (function () {
   const AGENT = "ChatGPT";
   const log = (...a) => { try { console.log("[ChatGPT CS]", ...a); } catch {} };
 
-  let briefingReceived = false;
+  let conversationUrl = null;
+  let isTracking = false;
 
   // ============================================
-  // HELLO au Service Worker
+  // Capturer l'URL de conversation
   // ============================================
-  chrome.runtime.sendMessage({ type: "HELLO_IA", agent: AGENT }, (res) => {
+  function captureConversationUrl() {
+    const url = window.location.href;
+    // ChatGPT URLs: https://chatgpt.com/c/abc-123-def
+    if (url.includes('/c/')) {
+      conversationUrl = url;
+      log("📌 Conversation URL capturée:", conversationUrl);
+      return conversationUrl;
+    }
+    return null;
+  }
+
+  // Détecter changement d'URL (navigation interne)
+  let lastUrl = window.location.href;
+  setInterval(() => {
+    if (window.location.href !== lastUrl) {
+      lastUrl = window.location.href;
+      captureConversationUrl();
+    }
+  }, 500);
+
+  // ============================================
+  // HELLO au Service Worker avec URL de conversation
+  // ============================================
+  chrome.runtime.sendMessage({ 
+    type: "HELLO_IA", 
+    agent: AGENT,
+    conversationUrl: captureConversationUrl()
+  }, (res) => {
     log("HELLO_IA ack:", res);
   });
 
@@ -17,12 +45,19 @@
   // ============================================
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     
-    // === Briefing automatique ===
-    if (msg?.type === "BRIEFING" && msg.rules && !briefingReceived) {
-      log("📣 Briefing reçu, injection dans ChatGPT...");
-      briefingReceived = true;
+    // === Briefing MANUEL (pas automatique) ===
+    if (msg?.type === "MANUAL_BRIEFING" && msg.rules) {
+      log("📣 Briefing manuel reçu, injection dans ChatGPT...");
       
-      // Injecter le briefing dans ChatGPT
+      // Vérifier qu'on est dans la bonne conversation
+      const currentUrl = captureConversationUrl();
+      if (!currentUrl) {
+        log("⚠️ Pas de conversation active détectée");
+        sendResponse?.({ ok: false, error: "No active conversation" });
+        return true;
+      }
+      
+      // Injecter le briefing
       const ta = document.querySelector('textarea[data-id="root"], textarea');
       if (ta) {
         ta.focus();
@@ -51,6 +86,15 @@ Merci de confirmer que vous avez bien compris les règles en répondant :
     // === Message Agora → ChatGPT ===
     if (msg?.type === "AGORA_TO_IA" && msg.to === AGENT) {
       log("AGORA_TO_IA reçu:", msg);
+
+      // Vérifier qu'on est dans la bonne conversation
+      const currentUrl = captureConversationUrl();
+      if (!currentUrl) {
+        log("⚠️ Pas de conversation active - création d'une nouvelle");
+        // On continue quand même, ça créera une nouvelle conversation
+      } else {
+        log("📌 Utilisation de la conversation:", currentUrl);
+      }
 
       // 1) Remplir textarea
       const ta = document.querySelector('textarea[data-id="root"], textarea');
@@ -120,6 +164,7 @@ ${txt}
                 from: AGENT,
                 to: msg.from || null,
                 raw_content: rawContent,
+                conversationUrl: captureConversationUrl(), // Ajouter l'URL
                 hash: `${Date.now()}-${Math.random().toString(36).slice(2)}`
               };
               
@@ -189,6 +234,7 @@ ${txt}
         from: AGENT,
         to: null,
         raw_content: rawContent,
+        conversationUrl: captureConversationUrl(), // Ajouter l'URL
         hash: `${Date.now()}-${Math.random().toString(36).slice(2)}`
       };
       

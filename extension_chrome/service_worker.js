@@ -124,16 +124,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       // === Un onglet IA se présente ===
       if (msg?.type === "HELLO_IA" && msg.agent) {
         REG.iaTabs[msg.agent] = sender.tab?.id || null;
-        console.log("[SW] IA ready:", msg.agent, "tab", REG.iaTabs[msg.agent]);
         
-        // Envoie le briefing automatiquement
-        const rules = await getCafeRules();
-        if (rules) {
-          chrome.tabs.sendMessage(sender.tab.id, {
-            type: "BRIEFING",
-            rules: rules
-          });
+        // Stocker l'URL de conversation si fournie
+        if (msg.conversationUrl) {
+          REG.conversationUrls[msg.agent] = msg.conversationUrl;
+          console.log("[SW] Conversation URL enregistrée:", msg.agent, "→", msg.conversationUrl);
         }
+        
+        console.log("[SW] IA ready:", msg.agent, "tab", REG.iaTabs[msg.agent]);
         
         sendResponse?.({ ok: true, role: "ia", agent: msg.agent, tabId: REG.iaTabs[msg.agent] });
         return;

@@ -147,6 +147,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         if (msg.hash) SEEN.add(msg.hash);
 
         console.log("[SW] IA_TO_BACKEND from", msg.from);
+        
+        // Stocker l'URL de conversation si fournie
+        if (msg.conversationUrl) {
+          REG.conversationUrls[msg.from] = msg.conversationUrl;
+          console.log("[SW] Conversation URL mise à jour:", msg.from, "→", msg.conversationUrl);
+        }
 
         // 1. Sauvegarder dans le backend
         const session = await getActiveSession();
@@ -155,7 +161,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             from_ia: msg.from,
             to_ia: msg.to,
             raw_content: msg.raw_content,
-            is_human: false
+            is_human: false,
+            conversation_url: msg.conversationUrl || REG.conversationUrls[msg.from]
           });
 
           // 2. Notifier l'Agora (frontend)
@@ -170,12 +177,17 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           if (session.config.orchestration_mode === 'pilote') {
             const nextIA = await getNextIA(session.id);
             if (nextIA && REG.iaTabs[nextIA]) {
-              console.log("[SW] Mode Pilote: Routing vers", nextIA);
-              chrome.tabs.sendMessage(REG.iaTabs[nextIA], {
-                type: "AGORA_TO_IA",
-                text: msg.raw_content, // Contexte du message précédent
-                from: msg.from
-              });
+              console.log("[SW] 🤖 Mode Pilote: Routing automatique vers", nextIA);
+              
+              // Attendre 2 secondes pour laisser l'IA finir sa réponse
+              setTimeout(() => {
+                chrome.tabs.sendMessage(REG.iaTabs[nextIA], {
+                  type: "AGORA_TO_IA",
+                  to: nextIA,
+                  text: msg.raw_content, // Contexte du message précédent
+                  from: msg.from
+                });
+              }, 2000);
             }
           }
         }

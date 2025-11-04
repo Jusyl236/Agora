@@ -1,5 +1,9 @@
 // Café Virtuel – Service Worker V2.0 (Intégration Backend)
-const REG = { agora: null, iaTabs: {} };
+const REG = { 
+  agora: null, 
+  iaTabs: {},
+  conversationUrls: {} // Stocker les URLs de conversation par IA
+};
 const SEEN = new Set();
 
 // Backend API

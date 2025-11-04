@@ -348,3 +348,17 @@ async def update_cafe_rules(rules: str):
         return {"status": "updated"}
     except Exception as e:
         raise HTTPException(500, f"Erreur sauvegarde des règles: {e}")
+
+
+@router.post("/briefing/send")
+async def send_briefing_to_ias():
+    """Envoie le briefing manuel aux IAs (via extension Chrome)
+    Note: Cette route déclenche juste une notification.
+    Le frontend devra envoyer via l'extension Chrome.
+    """
+    try:
+        rules = await get_cafe_rules()
+        return {"status": "ready", "rules": rules}
+    except Exception as e:
+        raise HTTPException(500, f"Erreur récupération des règles: {e}")
+

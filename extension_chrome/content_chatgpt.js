@@ -1,14 +1,42 @@
-// Café Virtuel – Content Script ChatGPT V2.0 (Backend intégré)
+// Café Virtuel – Content Script ChatGPT V2.1 (Conversation Sticky + Briefing Manuel)
 (function () {
   const AGENT = "ChatGPT";
   const log = (...a) => { try { console.log("[ChatGPT CS]", ...a); } catch {} };
 
-  let briefingReceived = false;
+  let conversationUrl = null;
+  let isTracking = false;
 
   // ============================================
-  // HELLO au Service Worker
+  // Capturer l'URL de conversation
   // ============================================
-  chrome.runtime.sendMessage({ type: "HELLO_IA", agent: AGENT }, (res) => {
+  function captureConversationUrl() {
+    const url = window.location.href;
+    // ChatGPT URLs: https://chatgpt.com/c/abc-123-def
+    if (url.includes('/c/')) {
+      conversationUrl = url;
+      log("📌 Conversation URL capturée:", conversationUrl);
+      return conversationUrl;
+    }
+    return null;
+  }
+
+  // Détecter changement d'URL (navigation interne)
+  let lastUrl = window.location.href;
+  setInterval(() => {
+    if (window.location.href !== lastUrl) {
+      lastUrl = window.location.href;
+      captureConversationUrl();
+    }
+  }, 500);
+
+  // ============================================
+  // HELLO au Service Worker avec URL de conversation
+  // ============================================
+  chrome.runtime.sendMessage({ 
+    type: "HELLO_IA", 
+    agent: AGENT,
+    conversationUrl: captureConversationUrl()
+  }, (res) => {
     log("HELLO_IA ack:", res);
   });
 

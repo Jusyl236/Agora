@@ -38,10 +38,16 @@
   // Listener pour messages entrants
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     
-    // === Briefing automatique ===
-    if (msg?.type === "BRIEFING" && msg.rules && !briefingReceived) {
-      log("📣 Briefing reçu, injection dans Claude...");
-      briefingReceived = true;
+    // === Briefing MANUEL ===
+    if (msg?.type === "MANUAL_BRIEFING" && msg.rules) {
+      log("📣 Briefing manuel reçu, injection dans Claude...");
+      
+      const currentUrl = captureConversationUrl();
+      if (!currentUrl) {
+        log("⚠️ Pas de conversation active détectée");
+        sendResponse?.({ ok: false, error: "No active conversation" });
+        return true;
+      }
       
       const ta = document.querySelector('div[contenteditable="true"], textarea');
       if (ta) {

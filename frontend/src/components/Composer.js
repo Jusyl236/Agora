@@ -222,6 +222,15 @@ ${message}
         </button>
       </div>
 
+      {/* Bouton Briefing Manuel */}
+      <button
+        onClick={handleSendBriefing}
+        disabled={sendingBriefing || !activeSession}
+        className="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white py-2 px-4 rounded-lg font-medium hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg mb-2"
+      >
+        {sendingBriefing ? '⏳ Envoi du briefing...' : '📣 Briefer les IAs (Manuel)'}
+      </button>
+
       {/* Bouton Envoyer */}
       <button
         onClick={handleSend}

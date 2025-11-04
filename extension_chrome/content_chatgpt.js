@@ -87,6 +87,15 @@ Merci de confirmer que vous avez bien compris les règles en répondant :
     if (msg?.type === "AGORA_TO_IA" && msg.to === AGENT) {
       log("AGORA_TO_IA reçu:", msg);
 
+      // Vérifier qu'on est dans la bonne conversation
+      const currentUrl = captureConversationUrl();
+      if (!currentUrl) {
+        log("⚠️ Pas de conversation active - création d'une nouvelle");
+        // On continue quand même, ça créera une nouvelle conversation
+      } else {
+        log("📌 Utilisation de la conversation:", currentUrl);
+      }
+
       // 1) Remplir textarea
       const ta = document.querySelector('textarea[data-id="root"], textarea');
       if (!ta) {

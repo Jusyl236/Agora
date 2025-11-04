@@ -234,6 +234,7 @@ ${txt}
         from: AGENT,
         to: null,
         raw_content: rawContent,
+        conversationUrl: captureConversationUrl(), // Ajouter l'URL
         hash: `${Date.now()}-${Math.random().toString(36).slice(2)}`
       };
       

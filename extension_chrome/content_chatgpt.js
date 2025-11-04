@@ -45,12 +45,19 @@
   // ============================================
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     
-    // === Briefing automatique ===
-    if (msg?.type === "BRIEFING" && msg.rules && !briefingReceived) {
-      log("📣 Briefing reçu, injection dans ChatGPT...");
-      briefingReceived = true;
+    // === Briefing MANUEL (pas automatique) ===
+    if (msg?.type === "MANUAL_BRIEFING" && msg.rules) {
+      log("📣 Briefing manuel reçu, injection dans ChatGPT...");
       
-      // Injecter le briefing dans ChatGPT
+      // Vérifier qu'on est dans la bonne conversation
+      const currentUrl = captureConversationUrl();
+      if (!currentUrl) {
+        log("⚠️ Pas de conversation active détectée");
+        sendResponse?.({ ok: false, error: "No active conversation" });
+        return true;
+      }
+      
+      // Injecter le briefing
       const ta = document.querySelector('textarea[data-id="root"], textarea');
       if (ta) {
         ta.focus();

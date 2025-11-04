@@ -66,6 +66,39 @@ ${message}
     }
   };
 
+  const handleSendBriefing = async () => {
+    if (!activeSession) return;
+    
+    setSendingBriefing(true);
+    try {
+      // Récupérer les règles du backend
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/cafe/config/rules`);
+      const data = await response.json();
+      const rules = data.rules;
+      
+      // Envoyer aux IAs via extension Chrome
+      if (window.chrome && window.chrome.runtime) {
+        // Envoyer à tous les onglets IA disponibles
+        availableIAs.forEach((ia) => {
+          window.chrome.runtime.sendMessage({
+            type: "MANUAL_BRIEFING",
+            rules: rules,
+            target: ia.name
+          });
+        });
+        
+        alert('✅ Briefing envoyé à toutes les IAs disponibles !');
+      } else {
+        alert('⚠️ Extension Chrome non détectée. Assurez-vous qu\'elle est chargée.');
+      }
+    } catch (err) {
+      console.error('Erreur envoi briefing:', err);
+      alert('❌ Erreur lors de l\'envoi du briefing');
+    } finally {
+      setSendingBriefing(false);
+    }
+  };
+
   if (!activeSession) {
     return null;
   }

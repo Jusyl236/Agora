@@ -16,6 +16,7 @@ const Composer = () => {
   const [message, setMessage] = useState('');
   const [selectedCafe, setSelectedCafe] = useState('long');
   const [targetIA, setTargetIA] = useState('');
+  const [sendingBriefing, setSendingBriefing] = useState(false);
 
   const availableIAs = activeSession?.config.participants.filter(p => p.is_available) || [];
 

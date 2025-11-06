@@ -18,8 +18,9 @@ class ExportService:
     """Service d'export des sessions"""
     
     def __init__(self):
-        self.export_dir = Path("/app/exports")
-        self.export_dir.mkdir(exist_ok=True)
+        # Chemin relatif compatible Windows/Linux/Mac
+        self.export_dir = Path(__file__).parent.parent / "exports"
+        self.export_dir.mkdir(exist_ok=True, parents=True)
     
     def export_to_markdown(self, session: Session, stats: Optional[SessionStatistics] = None) -> str:
         """Exporte une session en Markdown"""

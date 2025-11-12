@@ -70,7 +70,7 @@ class Message(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now)
     is_human: bool = False  # True si message de Julien
     detected_questions: List[str] = []  # Questions détectées automatiquement
-    metadata: Dict[str, Any] = {}
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
 class AIParticipant(BaseModel):

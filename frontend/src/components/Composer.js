@@ -16,6 +16,7 @@ const Composer = () => {
   const [message, setMessage] = useState('');
   const [selectedCafe, setSelectedCafe] = useState('long');
   const [targetIA, setTargetIA] = useState('');
+  const [manualConversationUrl, setManualConversationUrl] = useState('');
   const [sendingBriefing, setSendingBriefing] = useState(false);
 
   const availableIAs = activeSession?.config.participants.filter(p => p.is_available) || [];
@@ -48,12 +49,14 @@ ${message}
         from_ia: 'Julien',
         to_ia: targetIA || null,
         raw_content: rawContent,
-        is_human: true
+        is_human: true,
+        conversation_url: manualConversationUrl.trim() || undefined
       });
 
       // Réinitialiser
       setMessage('');
       setTargetIA('');
+      setManualConversationUrl('');
     } catch (err) {
       console.error('Erreur envoi message:', err);
     }
@@ -161,6 +164,24 @@ ${message}
             </option>
           ))}
         </select>
+      </div>
+
+      {/* URL de conversation (mode manuel) */}
+      <div className="mb-3">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          URL de conversation (optionnel)
+        </label>
+        <input
+          type="url"
+          value={manualConversationUrl}
+          onChange={(e) => setManualConversationUrl(e.target.value)}
+          placeholder="https://chat.openai.com/..."
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          disabled={loading}
+        />
+        <p className="mt-1 text-xs text-gray-500">
+          Collez ici l'URL si la capture automatique échoue. Laissez vide pour utiliser la détection de l'extension Chrome.
+        </p>
       </div>
 
       {/* Zone de texte */}

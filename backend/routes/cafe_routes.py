@@ -131,6 +131,7 @@ class AddMessageRequest(BaseModel):
     to_ia: Optional[str] = None
     raw_content: str
     is_human: bool = False
+    conversation_url: Optional[str] = None
 
 
 @router.post("/messages", response_model=Session)
@@ -152,6 +153,10 @@ async def add_message(request: AddMessageRequest):
     questions = orchestration_service.detect_questions(request.raw_content)
     
     # Crée le message
+    metadata = {}
+    if request.conversation_url:
+        metadata["conversation_url"] = request.conversation_url
+
     message = Message(
         session_id=request.session_id,
         from_ia=request.from_ia,
@@ -159,7 +164,8 @@ async def add_message(request: AddMessageRequest):
         formatted_message=formatted,
         raw_content=request.raw_content,
         is_human=request.is_human,
-        detected_questions=[q.question_text for q in questions]
+        detected_questions=[q.question_text for q in questions],
+        metadata=metadata
     )
     
     # Ajoute à la session

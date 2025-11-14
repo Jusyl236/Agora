@@ -1,271 +1,194 @@
-/**
- * Composer - Zone de saisie avec boutons Cafés et sélection mode
- */
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useCafe } from '../context/CafeContext';
+import { cafeApi } from '../services/cafeApi';
 
 const Composer = () => {
-  const { 
-    activeSession, 
-    addMessage, 
-    orchestrationMode, 
-    setOrchestrationMode,
-    loading 
-  } = useCafe();
-
   const [message, setMessage] = useState('');
-  const [selectedCafe, setSelectedCafe] = useState('long');
-  const [targetIA, setTargetIA] = useState('');
-  const [manualConversationUrl, setManualConversationUrl] = useState('');
-  const [sendingBriefing, setSendingBriefing] = useState(false);
+  const [selectedAIs, setSelectedAIs] = useState([]);
+  const [selectedCafe, setSelectedCafe] = useState('expresso');
+  const [mode, setMode] = useState('barman');
+  const { currentSession, addMessage } = useCafe();
+  const composerRef = useRef(null);
 
-  const availableIAs = activeSession?.config.participants.filter(p => p.is_available) || [];
-
-  const handleSend = async () => {
-    if (!message.trim() || !activeSession) return;
-
-    try {
-      // Construire le message au format prédéfini
-      const now = new Date();
-      const timestamp = now.toLocaleString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-
-      const rawContent = `[Début de réponse]
-[Julien]-[${timestamp}] - [Le Barman] - [${selectedCafe}] - [certitude]
-
-${message}
-
-[@ ${targetIA || 'Tous'}] ""
-[Julien] - Le Barman
-[Fin de réponse]`;
-
-      await addMessage({
-        from_ia: 'Julien',
-        to_ia: targetIA || null,
-        raw_content: rawContent,
-        is_human: true,
-        conversation_url: manualConversationUrl.trim() || undefined
-      });
-
-      // Réinitialiser
-      setMessage('');
-      setTargetIA('');
-    } catch (err) {
-      console.error('Erreur envoi message:', err);
-    }
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  const handleSendBriefing = async () => {
-    if (!activeSession) return;
-    
-    setSendingBriefing(true);
-    try {
-      // Récupérer les règles du backend
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/cafe/config/rules`);
-      const data = await response.json();
-      const rules = data.rules;
-      
-      // Envoyer aux IAs via extension Chrome
-      if (window.chrome && window.chrome.runtime) {
-        // Envoyer à tous les onglets IA disponibles
-        availableIAs.forEach((ia) => {
-          window.chrome.runtime.sendMessage({
-            type: "MANUAL_BRIEFING",
-            rules: rules,
-            target: ia.name
-          });
-        });
-        
-        alert('✅ Briefing envoyé à toutes les IAs disponibles !');
-      } else {
-        alert('⚠️ Extension Chrome non détectée. Assurez-vous qu\'elle est chargée.');
+  // 🐛 CORRECTION : Cleanup pour éviter l'erreur React
+  useEffect(() => {
+    const handleModeChange = (e) => {
+      if (e.detail && e.detail.mode) {
+        setMode(e.detail.mode);
       }
-    } catch (err) {
-      console.error('Erreur envoi briefing:', err);
-      alert('❌ Erreur lors de l\'envoi du briefing');
-    } finally {
-      setSendingBriefing(false);
+    };
+    
+    window.addEventListener('modeChanged', handleModeChange);
+    
+    return () => {
+      window.removeEventListener('modeChanged', handleModeChange);
+    };
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!message.trim() || selectedAIs.length === 0) return;
+
+    try {
+      const payload = {
+        sessionId: currentSession?.id,
+        message: message,
+        targetAIs: selectedAIs,
+        cafeType: selectedCafe,
+        mode: mode
+      };
+
+      const response = await cafeApi.sendMessage(payload);
+      
+      if (response.data) {
+        addMessage(response.data);
+        setMessage('');
+        
+        if (mode === 'pilote') {
+          window.dispatchEvent(new CustomEvent('piloteModeActivated', { 
+            detail: { sessionId: currentSession?.id } 
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Erreur envoi message:', error);
+      addMessage({
+        id: Date.now(),
+        sender: 'System',
+        content: `❌ Erreur: ${error.message}`,
+        timestamp: new Date().toISOString(),
+        state: 'incertain'
+      });
     }
   };
 
-  if (!activeSession) {
-    return null;
-  }
+  const handleAIChange = (e) => {
+    const options = Array.from(e.target.selectedOptions).map(o => o.value);
+    setSelectedAIs(options);
+  };
+
+  const handleBriefing = async () => {
+    try {
+      await cafeApi.briefAIs({
+        sessionId: currentSession?.id,
+        ais: selectedAIs
+      });
+      
+      addMessage({
+        id: Date.now(),
+        sender: 'System',
+        content: '📣 Briefing envoyé aux IAs sélectionnées',
+        timestamp: new Date().toISOString(),
+        state: 'certitude'
+      });
+    } catch (error) {
+      console.error('Erreur briefing:', error);
+    }
+  };
+
+  // Gestion du clic sur un @mention dans la timeline
+  useEffect(() => {
+    const handleMentionClick = (e) => {
+      if (e.target.classList.contains('mention')) {
+        const aiName = e.target.dataset.ai;
+        if (aiName && !selectedAIs.includes(aiName)) {
+          setSelectedAIs(prev => [...prev, aiName]);
+        }
+      }
+    };
+
+    document.addEventListener('click', handleMentionClick);
+    
+    return () => {
+      document.removeEventListener('click', handleMentionClick);
+    };
+  }, [selectedAIs]);
 
   return (
-    <div className="bg-white rounded-lg p-4 shadow-md border border-gray-200">
-      {/* Mode d'orchestration */}
-      <div className="flex gap-2 mb-3">
-        <button
-          onClick={() => setOrchestrationMode('barman')}
-          className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-            orchestrationMode === 'barman'
-              ? 'bg-purple-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-          disabled={loading}
-        >
-          🧑 Barman
-        </button>
-        <button
-          onClick={() => setOrchestrationMode('pilote')}
-          className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-            orchestrationMode === 'pilote'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-          disabled={loading}
-        >
-          🤖 Pilote
-        </button>
-        <button
-          onClick={() => setOrchestrationMode('sommelier')}
-          className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-            orchestrationMode === 'sommelier'
-              ? 'bg-amber-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-          disabled={loading}
-        >
-          🍷 Sommelier
-        </button>
-      </div>
+    <div ref={composerRef} className="composer bg-slate-800 p-4 rounded-lg border border-amber-400/20">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex gap-2">
+          <select 
+            multiple 
+            value={selectedAIs} 
+            onChange={handleAIChange}
+            className="flex-1 bg-slate-700 text-white p-2 rounded border border-slate-600"
+            size="3"
+          >
+            <option value="ChatGPT">ChatGPT</option>
+            <option value="Claude">Claude</option>
+            <option value="Mistral">Mistral</option>
+            <option value="Grok">Grok</option>
+            <option value="DeepSeek">DeepSeek</option>
+            <option value="Gemini">Gemini</option>
+            <option value="Perplexity">Perplexity</option>
+            <option value="QWEN">QWEN</option>
+            <option value="Manus AI">Manus AI</option>
+            <option value="Kimi">Kimi</option>
+          </select>
+        </div>
 
-      {/* Destinataire */}
-      <div className="mb-3">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Destinataire
-        </label>
-        <select
-          value={targetIA}
-          onChange={(e) => setTargetIA(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          disabled={loading}
-        >
-          <option value="">@ Tous</option>
-          {availableIAs.map((ia) => (
-            <option key={ia.name} value={ia.name}>
-              @ {ia.name}
-              {ia.tokens_remaining !== null && ` (${ia.tokens_remaining} tokens restants)`}
-            </option>
-          ))}
-        </select>
-      </div>
+        <div className="flex gap-2">
+          <select 
+            value={selectedCafe} 
+            onChange={(e) => setSelectedCafe(e.target.value)}
+            className="bg-slate-700 text-white p-2 rounded border border-slate-600"
+          >
+            <option value="expresso">☕ Expresso</option>
+            <option value="long">☕ Café Long</option>
+            <option value="cosmique">☕ Café Cosmique</option>
+            <option value="gourmand">🍰 Café Gourmand</option>
+          </select>
 
-      {/* URL de conversation (mode manuel) */}
-      <div className="mb-3">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          URL de conversation (optionnel)
-        </label>
-        <input
-          type="url"
-          value={manualConversationUrl}
-          onChange={(e) => setManualConversationUrl(e.target.value)}
-          placeholder="https://chat.openai.com/..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          disabled={loading}
+          <select 
+            value={mode} 
+            onChange={(e) => {
+              const newMode = e.target.value;
+              setMode(newMode);
+              window.dispatchEvent(new CustomEvent('modeChanged', { detail: { mode: newMode } }));
+            }}
+            className="bg-slate-700 text-white p-2 rounded border border-slate-600"
+          >
+            <option value="barman">🧑 Mode Barman</option>
+            <option value="pilote">🤖 Mode Pilote</option>
+            <option value="sommelier">🍷 Mode Sommelier</option>
+          </select>
+        </div>
+
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Que souhaitez-vous discuter aujourd'hui ?..."
+          className="w-full bg-slate-700 text-white p-3 rounded border border-slate-600 resize-none"
+          rows="3"
         />
-        <p className="mt-1 text-xs text-gray-500">
-          Collez ici l'URL si la capture automatique échoue. Laissez vide pour utiliser la détection de l'extension Chrome.
-        </p>
-      </div>
 
-      {/* Zone de texte */}
-      <textarea
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        onKeyPress={handleKeyPress}
-        placeholder="Votre message ici... (Shift+Enter pour nouvelle ligne, Enter pour envoyer)"
-        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-        rows="4"
-        disabled={loading}
-      />
-
-      {/* Boutons Cafés */}
-      <div className="flex gap-2 mt-3 mb-3">
-        <button
-          onClick={() => setSelectedCafe('expresso')}
-          className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-            selectedCafe === 'expresso'
-              ? 'bg-amber-900 text-white shadow-md'
-              : 'bg-amber-50 text-amber-900 hover:bg-amber-100'
-          }`}
-          disabled={loading}
-        >
-          ☕ Expresso
-        </button>
-        <button
-          onClick={() => setSelectedCafe('long')}
-          className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-            selectedCafe === 'long'
-              ? 'bg-amber-700 text-white shadow-md'
-              : 'bg-amber-50 text-amber-900 hover:bg-amber-100'
-          }`}
-          disabled={loading}
-        >
-          ☕ Café Long
-        </button>
-        <button
-          onClick={() => setSelectedCafe('cosmique')}
-          className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-            selectedCafe === 'cosmique'
-              ? 'bg-purple-600 text-white shadow-md'
-              : 'bg-purple-50 text-purple-900 hover:bg-purple-100'
-          }`}
-          disabled={loading}
-        >
-          ☕ Cosmique
-        </button>
-        <button
-          onClick={() => setSelectedCafe('gourmand')}
-          className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-            selectedCafe === 'gourmand'
-              ? 'bg-pink-600 text-white shadow-md'
-              : 'bg-pink-50 text-pink-900 hover:bg-pink-100'
-          }`}
-          disabled={loading}
-        >
-          🍰 Gourmand
-        </button>
-      </div>
-
-      {/* Bouton Briefing Manuel */}
-      <button
-        onClick={handleSendBriefing}
-        disabled={sendingBriefing || !activeSession}
-        className="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white py-2 px-4 rounded-lg font-medium hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg mb-2"
-      >
-        {sendingBriefing ? '⏳ Envoi du briefing...' : '📣 Briefer les IAs (Manuel)'}
-      </button>
-
-      {/* Bouton Envoyer */}
-      <button
-        onClick={handleSend}
-        disabled={!message.trim() || loading}
-        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
-      >
-        {loading ? '⏳ Envoi...' : '📤 Envoyer'}
-      </button>
-
-      {/* Info mode */}
-      <div className="mt-3 text-xs text-gray-500 text-center">
-        {orchestrationMode === 'barman' && '🧑 Mode Barman : Contrôle manuel total'}
-        {orchestrationMode === 'pilote' && '🤖 Mode Pilote : Orchestration automatique'}
-        {orchestrationMode === 'sommelier' && '🍷 Mode Sommelier : Suggestions validables'}
-      </div>
+        <div className="flex gap-2 justify-between">
+          <button 
+            type="button" 
+            onClick={handleBriefing}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded transition-colors"
+          >
+            📣 Briefer les IAs
+          </button>
+          
+          <div className="flex gap-2">
+            <button 
+              type="button" 
+              onClick={() => setMessage('')}
+              className="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded transition-colors"
+            >
+              Effacer
+            </button>
+            <button 
+              type="submit"
+              className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-6 py-2 rounded transition-colors"
+            >
+              Envoyer
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
   );
 };

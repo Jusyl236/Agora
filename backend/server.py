@@ -94,3 +94,24 @@ logger = logging.getLogger(__name__)
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+# Démarrage automatique si le script est exécuté directement
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    
+    # Configuration pour Windows
+    port = int(os.getenv("PORT", 8001))
+    host = os.getenv("HOST", "0.0.0.0")
+    
+    print(f"🚀 Démarrage du Café Virtuel Backend...")
+    print(f"📡 API disponible sur: http://{host}:{port}")
+    print(f"📚 Docs Swagger sur: http://{host}:{port}/docs")
+    
+    uvicorn.run(
+        "server:app",
+        host=host,
+        port=port,
+        reload=True,
+        log_level="info"
+    )

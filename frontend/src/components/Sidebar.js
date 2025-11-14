@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCafe } from '../context/CafeContext';
 import { cafeApi } from '../services/cafeApi';
+import DebugURLPanel from './DebugURLPanel';
 
 export const AlertsPanel = () => {
   const { activeSession, suggestion, acceptSuggestion, rejectSuggestion, STATE_EMOJIS } = useCafe();
@@ -259,6 +260,59 @@ export const QuestionsPanel = () => {
           ))}
         </div>
       )}
+    </div>
+  );
+};
+
+// 🐛 Panneau de débogage URLs
+export const DebugURLPanel = () => {
+  const { currentSession } = useCafe();
+  const [urls, setUrls] = useState({
+    "ChatGPT": "",
+    "Claude": "",
+    "Mistral": "",
+    "Grok": "",
+    "DeepSeek": "",
+    "Gemini": "",
+    "Perplexity": "",
+    "QWEN": "",
+    "Manus AI": "",
+    "Kimi": ""
+  });
+
+  const handleUrlChange = (iaName, url) => {
+    setUrls(prev => ({ ...prev, [iaName]: url }));
+    console.log(`📍 URL mise à jour pour ${iaName} : ${url}`);
+  };
+
+  return (
+    <div className="bg-white rounded-lg p-4 shadow-md border border-gray-200">
+      <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+        🐛 DEBUG - URLs des Conversations
+      </h3>
+      
+      {Object.entries(urls).map(([iaName, url]) => (
+        <div key={iaName} className="mb-3 p-2 bg-gray-50 rounded">
+          <label className="block text-sm font-bold text-gray-700 mb-1">{iaName}</label>
+          <input
+            type="text"
+            value={url}
+            onChange={(e) => handleUrlChange(iaName, e.target.value)}
+            placeholder={`Coller l'URL de ${iaName} ici...`}
+            className="w-full bg-white text-gray-900 p-2 rounded border border-gray-300 text-xs"
+          />
+        </div>
+      ))}
+      
+      <button
+        onClick={() => {
+          navigator.clipboard.writeText(JSON.stringify(urls, null, 2));
+          alert("📋 URLs copiées dans le presse-papiers !");
+        }}
+        className="mt-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+      >
+        📋 Copier toutes les URLs
+      </button>
     </div>
   );
 };

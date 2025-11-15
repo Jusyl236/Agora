@@ -39,14 +39,22 @@ async function getActiveSession() {
 
 async function addMessageToBackend(sessionId, messageData) {
   try {
-    const response = await fetch(`${API_BASE}/messages`, {
+    // 🐛 CORRECTION : on appelle la bonne route /send_message
+    const payload = {
+      session_id: sessionId,
+      target_ais: [messageData.from_ia], // IA qui vient de répondre
+      message: messageData.raw_content,
+      cafe_type: "long", // par défaut
+      mode: "barman",    // par défaut
+      is_human: messageData.is_human || false
+    };
+
+    const response = await fetch(`${API_BASE}/send_message`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        session_id: sessionId,
-        ...messageData
-      })
+      body: JSON.stringify(payload)
     });
+
     if (!response.ok) throw new Error('Erreur ajout message');
     return await response.json();
   } catch (e) {
@@ -54,7 +62,6 @@ async function addMessageToBackend(sessionId, messageData) {
     return null;
   }
 }
-
 async function getNextIA(sessionId) {
   try {
     const response = await fetch(`${API_BASE}/orchestration/next-ia/${sessionId}`);

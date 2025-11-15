@@ -72,17 +72,14 @@ class CafeApiService {
       cafe_type: payload.cafeType || payload.cafe_type,
       mode: payload.mode,
       is_human: payload.is_human || false
-    };
-    
-    const response = await axios.post(`${CAFE_API}/send_message`, formattedPayload);
-    return response.data;
-  }  // ============================================
-  // MESSAGES
-  // ============================================
+    } ;
 
-  async addMessage(messageData) {
-    const response = await axios.post(`${CAFE_API}/messages`, messageData);
-    return response.data;
+    // 🐛 On appelle /send_message MAIS on renvoie la Session complète
+    await axios.post(`${CAFE_API}/send_message`, formattedPayload);
+
+    // On re-fetch la session mise à jour pour avoir la timeline à jour
+    const session = await this.getSession(payload.sessionId || payload.session_id);
+    return session;
   }
 
   // ============================================

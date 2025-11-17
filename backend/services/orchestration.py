@@ -264,8 +264,8 @@ class OrchestrationService:
             if q.target_ia and q.target_ia != "Julien":
                 return q.target_ia
         
-        # Si état Recherche → Perplexity
-        if latest_message.formatted_message.state == Mem4RistorState.RECHERCHE:
+        # Si état Recherche → Perplexity (seulement si message bien formaté)
+        if latest_message.formatted_message and latest_message.formatted_message.state == Mem4RistorState.RECHERCHE:
             if any(p.name == "Perplexity" and p.is_available for p in session.config.participants):
                 return "Perplexity"
         

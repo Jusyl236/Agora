@@ -145,8 +145,8 @@ async def add_message(request: AddMessageRequest):
         request.from_ia
     )
     
-    if not formatted:
-        raise HTTPException(400, "Format de message invalide")
+    # Note: On accepte les messages même si le parsing échoue
+    # Le formatted_message sera None dans ce cas
     
     # Détecte les questions
     questions = orchestration_service.detect_questions(request.raw_content)
@@ -156,7 +156,7 @@ async def add_message(request: AddMessageRequest):
         session_id=request.session_id,
         from_ia=request.from_ia,
         to_ia=request.to_ia,
-        formatted_message=formatted,
+        formatted_message=formatted,  # Peut être None
         raw_content=request.raw_content,
         is_human=request.is_human,
         detected_questions=[q.question_text for q in questions]

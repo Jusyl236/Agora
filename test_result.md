@@ -130,15 +130,18 @@ backend:
 
   - task: "API création de session"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/routes/cafe_routes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Route POST /api/cafe/sessions - à tester"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTÉ: POST /api/cafe/sessions fonctionne correctement. Session créée avec configuration complète (3 IAs participantes, mode barman, conditions d'arrêt). Retourne session avec ID valide."
 
   - task: "API ajout de messages"
     implemented: true

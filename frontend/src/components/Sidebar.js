@@ -250,7 +250,7 @@ export const QuestionsPanel = () => {
           {messagesWithQuestions.slice(-5).map((msg, i) => (
             <div key={i} className="bg-blue-50 rounded p-3 text-sm">
               <div className="font-medium text-blue-900 mb-1">
-                De: {msg.formatted_message.ia_name}
+                De: {msg.formatted_message?.ia_name || msg.from_ia}
               </div>
               <div className="text-blue-700 text-xs">
                 {msg.detected_questions[0]}

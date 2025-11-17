@@ -1,16 +1,36 @@
 /**
- * Sidebar - Composants latéraux (Alertes, Stats, Exports)
+ * Sidebar.js – Barre latérale modulaire du Café Virtuel
+ * -----------------------------------------------------
+ * Ce fichier exporte 5 composants React :
+ *  1. AlertsPanel     : suggestions Sommelier + moments Oracle
+ *  2. StatsPanel      : stats messages, états Mem4Ristor, cafés servis
+ *  3. QuestionsPanel  : questions détectées dans les réponses des IAs
+ *  4. ExportsPanel    : export local, GitHub, e-mail
+ *  5. DebugURLPanel   : 🐛 saisie manuelle des URLs des conversations
+ *
+ * Utilisation :
+ *   import { AlertsPanel, StatsPanel, QuestionsPanel, ExportsPanel, DebugURLPanel } from './Sidebar';
+ *   Puis dans votre JSX :
+ *   <AlertsPanel />
+ *   <StatsPanel />
+ *   ...
  */
+
 import React, { useState, useEffect } from 'react';
 import { useCafe } from '../context/CafeContext';
 import { cafeApi } from '../services/cafeApi';
+// ↑ Hook global et service API déjà configurés
 
+/* ------------------------------------------------------------------ */
+/* 1. ALERTES – Suggestions Sommelier + moments Oracle                */
+/* ------------------------------------------------------------------ */
 export const AlertsPanel = () => {
   const { activeSession, suggestion, acceptSuggestion, rejectSuggestion, STATE_EMOJIS } = useCafe();
 
+  // Pas de session active → on n’affiche rien
   if (!activeSession) return null;
 
-  // Moments Oracle
+  // Messages marqués "Oracle" (breakthrough rare)
   const oracleMessages = activeSession.messages?.filter(
     m => m.formatted_message && m.formatted_message.state === 'oracle'
   ) || [];
@@ -21,7 +41,7 @@ export const AlertsPanel = () => {
         🔔 Alertes & Suggestions
       </h3>
 
-      {/* Suggestion Sommelier */}
+      {/* Suggestion du mode Sommelier */}
       {suggestion && (
         <div className="bg-purple-50 border-2 border-purple-300 rounded-lg p-3 mb-3 animate-pulse">
           <div className="text-sm font-medium text-purple-900 mb-2">
@@ -49,7 +69,7 @@ export const AlertsPanel = () => {
         </div>
       )}
 
-      {/* Moments Oracle */}
+      {/* Moments Oracle (breakthrough) */}
       {oracleMessages.length > 0 && (
         <div className="mb-3">
           <div className="text-sm font-medium text-gray-700 mb-2">
@@ -70,7 +90,7 @@ export const AlertsPanel = () => {
         </div>
       )}
 
-      {/* État de la session */}
+      {/* État de la session (active/pause) */}
       <div className="text-xs text-gray-500">
         Session {activeSession.status === 'active' ? '🟢 Active' : '⏸️ En pause'}
       </div>
@@ -78,10 +98,14 @@ export const AlertsPanel = () => {
   );
 };
 
+/* ------------------------------------------------------------------ */
+/* 2. STATS – Messages, états Mem4Ristor, cafés servis, durée         */
+/* ------------------------------------------------------------------ */
 export const StatsPanel = () => {
   const { activeSession, STATE_EMOJIS } = useCafe();
   const [stats, setStats] = useState(null);
 
+  // Récupère les stats dès que la session ou ses messages changent
   useEffect(() => {
     if (activeSession) {
       cafeApi.getSessionStats(activeSession.id)
@@ -99,13 +123,13 @@ export const StatsPanel = () => {
       </h3>
 
       <div className="space-y-3">
-        {/* Messages totaux */}
+        {/* Total messages */}
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Messages</span>
           <span className="font-bold text-gray-900">{stats.total_messages}</span>
         </div>
 
-        {/* Par IA */}
+        {/* Messages par IA */}
         <div>
           <div className="text-xs font-medium text-gray-700 mb-2">Par IA :</div>
           <div className="space-y-1">
@@ -118,7 +142,7 @@ export const StatsPanel = () => {
           </div>
         </div>
 
-        {/* États */}
+        {/* Répartition des états Mem4Ristor */}
         <div>
           <div className="text-xs font-medium text-gray-700 mb-2">États :</div>
           <div className="grid grid-cols-2 gap-2">
@@ -154,7 +178,7 @@ export const StatsPanel = () => {
           </div>
         </div>
 
-        {/* Durée */}
+        {/* Durée de la session */}
         <div className="flex justify-between items-center pt-2 border-t">
           <span className="text-sm text-gray-600">Durée</span>
           <span className="font-bold text-gray-900">
@@ -166,17 +190,62 @@ export const StatsPanel = () => {
   );
 };
 
+/* ------------------------------------------------------------------ */
+/* 3. QUESTIONS – Questions détectées dans les messages des IAs       */
+/* ------------------------------------------------------------------ */
+export const QuestionsPanel = () => {
+  const { activeSession } = useCafe();
+
+  if (!activeSession) return null;
+
+  // Filtre les messages qui ont une ou plusieurs questions détectées
+  const messagesWithQuestions = activeSession.messages?.filter(
+    m => m.detected_questions && m.detected_questions.length > 0
+  ) || [];
+
+  return (
+    <div className="bg-white rounded-lg p-4 shadow-md border border-gray-200">
+      <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+        ❓ Questions détectées
+      </h3>
+
+      {messagesWithQuestions.length === 0 ? (
+        <div className="text-sm text-gray-500 text-center py-4">
+          Aucune question détectée
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {messagesWithQuestions.slice(-5).map((msg, i) => (
+            <div key={i} className="bg-blue-50 rounded p-3 text-sm">
+              <div className="font-medium text-blue-900 mb-1">
+                De : {msg.formatted_message.ia_name}
+              </div>
+              <div className="text-blue-700 text-xs">
+                {msg.detected_questions[0]}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ------------------------------------------------------------------ */
+/* 4. EXPORTS – Local, GitHub, Email                                  */
+/* ------------------------------------------------------------------ */
 export const ExportsPanel = () => {
   const { activeSession, exportSession } = useCafe();
   const [exporting, setExporting] = useState(false);
 
+  // Appelle le service d’export (local, github ou email)
   const handleExport = async (format, formats = ['markdown', 'json']) => {
     setExporting(true);
     try {
       const result = await exportSession(format, formats);
       alert(`✅ Export réussi !\n${JSON.stringify(result, null, 2)}`);
     } catch (err) {
-      alert(`❌ Erreur: ${err.message}`);
+      alert(`❌ Erreur : ${err.message}`);
     } finally {
       setExporting(false);
     }
@@ -225,20 +294,34 @@ export const ExportsPanel = () => {
   );
 };
 
-export const QuestionsPanel = () => {
-  const { activeSession } = useCafe();
+/* ------------------------------------------------------------------ */
+/* 5. DEBUG URL – Saisie manuelle des URLs de conversation            */
+/* ------------------------------------------------------------------ */
+export const DebugURLPanel = () => {
+  const { currentSession } = useCafe();
+  const [urls, setUrls] = useState({
+    "ChatGPT": "",
+    "Claude": "",
+    "Mistral": "",
+    "Grok": "",
+    "DeepSeek": "",
+    "Gemini": "",
+    "Perplexity": "",
+    "QWEN": "",
+    "Manus AI": "",
+    "Kimi": ""
+  });
 
-  if (!activeSession) return null;
-
-  // Messages avec questions détectées
-  const messagesWithQuestions = activeSession.messages?.filter(
-    m => m.detected_questions && m.detected_questions.length > 0
-  ) || [];
+  // Met à jour l’état local + log dans la console
+  const handleUrlChange = (iaName, url) => {
+    setUrls(prev => ({ ...prev, [iaName]: url }));
+    console.log(`📍 URL mise à jour pour ${iaName} : ${url}`);
+  };
 
   return (
     <div className="bg-white rounded-lg p-4 shadow-md border border-gray-200">
       <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-        ❓ Questions détectées
+        🐛 DEBUG - URLs des Conversations
       </h3>
 
       {messagesWithQuestions.length === 0 ? (
@@ -258,7 +341,17 @@ export const QuestionsPanel = () => {
             </div>
           ))}
         </div>
-      )}
+      ))}
+
+      <button
+        onClick={() => {
+          navigator.clipboard.writeText(JSON.stringify(urls, null, 2));
+          alert("📋 URLs copiées dans le presse-papiers !");
+        }}
+        className="mt-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+      >
+        📋 Copier toutes les URLs
+      </button>
     </div>
   );
 };

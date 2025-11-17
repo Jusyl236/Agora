@@ -93,10 +93,15 @@ export const CafeProvider = ({ children }) => {
 
     setLoading(true);
     try {
-      const updatedSession = await cafeApi.addMessage({
-        ...messageData,
-        session_id: activeSession.id
-      });
+      // 🐛 CORRECTION : on appelle la bonne route /send_message pour l'envoi initial
+      const updatedSession = await cafeApi.sendMessage({
+       sessionId: activeSession.id,
+       targetAIs: [messageData.from_ia], // IA qui vient de répondre
+       message: messageData.raw_content,
+       cafeType: "long", // par défaut
+       mode: orchestrationMode,
+       is_human: messageData.is_human || false
+  });
       setActiveSession(updatedSession);
 
       // Si mode Sommelier ou Pilote, obtenir suggestion/prochaine IA

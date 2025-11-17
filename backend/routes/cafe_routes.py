@@ -131,6 +131,7 @@ class AddMessageRequest(BaseModel):
     to_ia: Optional[str] = None
     raw_content: str
     is_human: bool = False
+    conversation_url: Optional[str] = None
 
 
 @router.post("/messages", response_model=Session)
@@ -152,6 +153,10 @@ async def add_message(request: AddMessageRequest):
     questions = orchestration_service.detect_questions(request.raw_content)
     
     # Crée le message
+    metadata = {}
+    if request.conversation_url:
+        metadata["conversation_url"] = request.conversation_url
+
     message = Message(
         session_id=request.session_id,
         from_ia=request.from_ia,
@@ -159,7 +164,8 @@ async def add_message(request: AddMessageRequest):
         formatted_message=formatted,  # Peut être None
         raw_content=request.raw_content,
         is_human=request.is_human,
-        detected_questions=[q.question_text for q in questions]
+        detected_questions=[q.question_text for q in questions],
+        metadata=metadata
     )
     
     # Ajoute à la session
@@ -366,3 +372,161 @@ async def send_briefing_to_ias():
     except Exception as e:
         raise HTTPException(500, f"Erreur récupération des règles: {e}")
 
+# ============================================
+# ENVOI INITIAL DE MESSAGE (Mode Barman/Pilote)
+# ============================================
+
+class SendMessageRequest(BaseModel):
+    """Requête d'envoi initial de message"""
+    session_id: str
+    target_ais: List[str]  # Liste des IAs cibles
+    message: str
+    cafe_type: str
+    mode: str
+    is_human: bool = False
+
+
+@router.post("/send_message", response_model=dict)
+async def send_message(request: SendMessageRequest):
+    """Envoie un message initial aux IAs via l'extension Chrome"""
+    if not session_service:
+        raise HTTPException(500, "Service non initialisé")
+    
+    # Vérifie que la session existe
+    session = await session_service.get_session(request.session_id)
+    if not session:
+        raise HTTPException(404, "Session introuvable")
+    
+    # Formate le message selon les règles du Café
+    timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    cafe_emoji = {
+        "expresso": "☕",
+        "long": "☕",
+        "cosmique": "☕",
+        "gourmand": "🍰"
+    }.get(request.cafe_type, "☕")
+    
+    formatted_message = f"""[Début de réponse]
+[Le Barman]-[{timestamp}] - [ orchestrateur] - [{request.cafe_type}] - [certitude]
+
+{request.message}
+
+[@ {' & '.join(request.target_ais)}] "Quelle est votre réponse ?"
+[Le Barman] - Toujours à votre service
+[Fin de réponse]"""
+    
+    # Crée un message initial pour la timeline
+    initial_message = Message(
+        session_id=request.session_id,
+        from_ia="Le Barman",
+        to_ia=", ".join(request.target_ais),
+        formatted_message={
+            "debut": "[Début de réponse]",
+            "header": f"[Le Barman]-[{timestamp}] - [orchestrateur] - [{request.cafe_type}] - [certitude]",
+            "content": request.message,
+            "question": f"[@ {' & '.join(request.target_ais)}] \"Quelle est votre réponse ?\"",
+            "signature": "[Le Barman] - Toujours à votre service",
+            "fin": "[Fin de réponse]"
+        },
+        raw_content=formatted_message,
+        is_human=True,
+        timestamp=datetime.now(),
+        detected_questions=[f"Quelle est votre réponse de la part de {', '.join(request.target_ais)}"]
+    )
+    
+    # Enregistre le message initial
+    await session_service.add_message(request.session_id, initial_message)
+    
+    # Prépare la réponse pour le frontend
+    return {
+        "status": "sent",
+        "session_id": request.session_id,
+        "target_ais": request.target_ais,
+        "mode": request.mode,
+        "message_preview": request.message[:100] + "...",
+        "next_action": "En attente des réponses des IAs..."
+    }
+class UpdateUrlsRequest(BaseModel):
+    urls: dict
+
+
+@router.post("/sessions/{session_id}/participants/urls")
+async def update_participant_urls(session_id: str, request: UpdateUrlsRequest):
+    """Met à jour les URLs des participants manuellement"""
+    if not session_service:
+        raise HTTPException(500, "Service non initialisé")
+    
+    # Stocke les URLs dans la session
+    session = await session_service.get_session(session_id)
+    if not session:
+        raise HTTPException(404, "Session introuvable")
+    
+    # Met à jour les métadonnées de la session
+    if not session.metadata:
+        session.metadata = {}
+    
+    session.metadata["manual_urls"] = request.urls
+    
+    # Sauvegarde
+    await session_service.update_session(session_id, session)
+    
+    return {"status": "updated", "urls": request.urls}
+
+# ============================================
+# ENVOI INITIAL DE MESSAGE (Mode Barman/Pilote)
+# ============================================
+
+from datetime import datetime
+
+class SendMessageRequest(BaseModel):
+    session_id: str
+    target_ais: List[str]
+    message: str
+    cafe_type: str
+    mode: str
+    is_human: bool = False
+
+
+@router.post("/send_message")
+async def send_message(request: SendMessageRequest):
+    """Envoie un message initial aux IAs via l'extension Chrome"""
+    if not session_service:
+        raise HTTPException(500, "Service non initialisé")
+
+    session = await session_service.get_session(request.session_id)
+    if not session:
+        raise HTTPException(404, "Session introuvable")
+
+    # Formate le message
+    timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    formatted_message = f"""[Début de réponse]
+[Le Barman]-[{timestamp}] - [orchestrateur] - [{request.cafe_type}] - [certitude]
+
+{request.message}
+
+[@ {' & '.join(request.target_ais)}] "Quelle est votre réponse ?"
+[Le Barman] - Toujours à votre service
+[Fin de réponse]"""
+
+    # Ajoute le message à la session
+    from services.session_service import Message
+    message_obj = Message(
+        session_id=request.session_id,
+        from_ia="Le Barman",
+        to_ia=", ".join(request.target_ais),
+        formatted_message={
+            "debut": "[Début de réponse]",
+            "header": f"[Le Barman]-[{timestamp}] - [orchestrateur] - [{request.cafe_type}] - [certitude]",
+            "content": request.message,
+            "question": f"[@ {' & '.join(request.target_ais)}] \"Quelle est votre réponse ?\"",
+            "signature": "[Le Barman] - Toujours à votre service",
+            "fin": "[Fin de réponse]"
+        },
+        raw_content=formatted_message,
+        is_human=True,
+        timestamp=datetime.now()
+    )
+
+    await session_service.add_message(request.session_id, message_obj)
+
+    return {"status": "sent", "message": "Message initial envoyé"}

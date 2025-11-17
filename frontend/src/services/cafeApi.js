@@ -63,6 +63,25 @@ class CafeApiService {
     return response.data;
   }
 
+  // 🐛 CORRECTION : Fonction pour envoyer un message initial (Mode Barman/Pilote)
+  async sendMessage(payload) {
+    const formattedPayload = {
+      session_id: payload.sessionId || payload.session_id,
+      target_ais: payload.targetAIs || payload.target_ais,
+      message: payload.message,
+      cafe_type: payload.cafeType || payload.cafe_type,
+      mode: payload.mode,
+      is_human: payload.is_human || false
+    } ;
+
+    // 🐛 On appelle /send_message MAIS on renvoie la Session complète
+    await axios.post(`${CAFE_API}/send_message`, formattedPayload);
+
+    // On re-fetch la session mise à jour pour avoir la timeline à jour
+    const session = await this.getSession(payload.sessionId || payload.session_id);
+    return session;
+  }
+
   // ============================================
   // ORCHESTRATION
   // ============================================
@@ -121,6 +140,13 @@ class CafeApiService {
     );
     return response.data;
   }
+  async updateParticipantUrls(sessionId, urls) {
+  const response = await axios.post(
+    `${CAFE_API}/sessions/${sessionId}/participants/urls`,
+    { urls }
+  );
+  return response.data;
+}
 
   // ============================================
   // CONFIGURATION

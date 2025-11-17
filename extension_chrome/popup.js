@@ -50,3 +50,10 @@ document.getElementById('check-status').addEventListener('click', refreshStatus)
 
 // Check initial
 refreshStatus();
+
+// Ajoute un bouton pour copier l'URL
+document.getElementById('copy-url-btn').addEventListener('click', async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  await navigator.clipboard.writeText(tab.url);
+  alert(`📋 URL copiée : ${tab.url}`);
+});

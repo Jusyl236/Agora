@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import Timeline from '../components/Timeline';
 import Composer from '../components/Composer';
 import SessionModal from '../components/SessionModal';
-import { AlertsPanel, StatsPanel, ExportsPanel, QuestionsPanel } from '../components/Sidebar';
+import { AlertsPanel, StatsPanel, QuestionsPanel, ExportsPanel, DebugURLPanel } from '../components/Sidebar';
 import { useCafe } from '../context/CafeContext';
 
 const Agora = () => {
@@ -133,6 +133,7 @@ const Agora = () => {
             <StatsPanel />
             <QuestionsPanel />
             <ExportsPanel />
+            <DebugURLPanel />
           </div>
         </div>
       </div>

@@ -181,6 +181,10 @@ class OrchestrationService:
     ) -> Optional[OrchestrationSuggestion]:
         """Mode Sommelier : suggère la prochaine action"""
         
+        # Vérification de sécurité
+        if not latest_message.formatted_message:
+            return None
+            
         state = latest_message.formatted_message.state
         from_ia = latest_message.from_ia
         

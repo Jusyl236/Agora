@@ -64,11 +64,13 @@ class SessionService:
         session.stats["messages_per_ia"][message.from_ia] = \
             session.stats["messages_per_ia"].get(message.from_ia, 0) + 1
         
-        state_key = message.formatted_message.state.value
-        session.stats["states_distribution"][state_key] += 1
-        
-        if message.formatted_message.state.value == "oracle":
-            session.stats["oracle_moments"] += 1
+        # Mise à jour des stats seulement si le message est bien formaté
+        if message.formatted_message:
+            state_key = message.formatted_message.state.value
+            session.stats["states_distribution"][state_key] += 1
+            
+            if message.formatted_message.state.value == "oracle":
+                session.stats["oracle_moments"] += 1
         
         if message.detected_questions:
             session.stats["questions_detected"] += len(message.detected_questions)

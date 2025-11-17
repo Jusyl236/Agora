@@ -112,11 +112,11 @@ user_problem_statement: |
 backend:
   - task: "Gestion des messages mal formatés (erreur 422)"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/routes/cafe_routes.py, backend/models/session.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
@@ -124,6 +124,9 @@ backend:
       - working: "NA"
         agent: "main"
         comment: "✅ Correction effectuée : formatted_message est maintenant Optional dans Message. Les messages peuvent être acceptés même si le parsing échoue. Route /api/cafe/orchestration/suggest vérifie maintenant l'existence de formatted_message avant utilisation."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTÉ ET CORRIGÉ: Messages mal formatés acceptés correctement. Correction supplémentaire dans session_service.py et orchestration.py pour gérer formatted_message=None. Tests passent: POST /api/cafe/messages avec contenu mal formaté retourne formatted_message=None sans erreur 500."
 
   - task: "API création de session"
     implemented: true

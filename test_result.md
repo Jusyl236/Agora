@@ -163,9 +163,9 @@ backend:
 
 frontend:
   - task: "Bug React DOM lors changement de mode"
-    implemented: false
-    working: false
-    file: "frontend/src/context/CafeContext.js, frontend/src/components/Sidebar.js"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/context/CafeContext.js, frontend/src/components/Sidebar.js, frontend/src/components/Timeline.js"
     stuck_count: 0
     priority: "high"
     needs_retesting: true
@@ -173,6 +173,9 @@ frontend:
       - working: false
         agent: "main"
         comment: "Erreur 'removeChild on Node' lors du passage en mode Pilote ou Sommelier. Probablement lié à un re-render avec accès à formatted_message undefined"
+      - working: "NA"
+        agent: "main"
+        comment: "✅ Correction effectuée : Ajout de vérifications (optional chaining) dans Timeline.js, Sidebar.js (AlertsPanel, QuestionsPanel) et CafeContext.js pour vérifier l'existence de formatted_message avant accès. Timeline affiche maintenant un mode simplifié si formatted_message est null."
 
   - task: "Affichage des messages dans Timeline"
     implemented: true

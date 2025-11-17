@@ -173,6 +173,18 @@ backend:
         agent: "testing"
         comment: "✅ TESTÉ: Routes d'orchestration fonctionnent. GET /api/cafe/orchestration/suggest/{session_id}/{message_id} retourne suggestions pour messages bien formatés, None pour mal formatés. GET /api/cafe/orchestration/next-ia/{session_id} retourne prochaine IA en mode Pilote. Correction appliquée dans orchestration.py pour gérer formatted_message=None."
 
+  - task: "API récupération de sessions"
+    implemented: true
+    working: true
+    file: "backend/routes/cafe_routes.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTÉ: GET /api/cafe/sessions/{session_id} et GET /api/cafe/sessions/active/current fonctionnent correctement. Sessions récupérées avec tous les messages et métadonnées. Session active retournée ou None si aucune."
+
 frontend:
   - task: "Bug React DOM lors changement de mode"
     implemented: true

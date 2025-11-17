@@ -145,15 +145,18 @@ backend:
 
   - task: "API ajout de messages"
     implemented: true
-    working: false
+    working: true
     file: "backend/routes/cafe_routes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
         comment: "Route POST /api/cafe/messages - problème avec parsing des messages"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTÉ: POST /api/cafe/messages fonctionne pour messages bien ET mal formatés. Messages bien formatés: parsing réussi avec formatted_message complet. Messages mal formatés: acceptés avec formatted_message=None. Statistiques mises à jour correctement."
 
   - task: "API modes orchestration (Pilote/Sommelier)"
     implemented: true

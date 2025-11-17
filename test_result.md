@@ -101,3 +101,128 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: |
+  Julien (utilisateur français non-technique) a un projet "Café Virtuel" qui ne fonctionne pas correctement.
+  Problèmes identifiés:
+  1. Erreur 422 lors de l'ajout de messages (vérification des fichiers nécessaire)
+  2. Bug React DOM (removeChild) lors du passage en mode "Pilote" ou "Sommelier"
+  3. Besoin de stabilisation et tests complets
+
+backend:
+  - task: "Gestion des messages mal formatés (erreur 422)"
+    implemented: false
+    working: false
+    file: "backend/routes/cafe_routes.py, backend/models/session.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Le champ formatted_message dans Message n'est pas optionnel, mais parse_formatted_message peut retourner None, causant une erreur 422"
+
+  - task: "API création de session"
+    implemented: true
+    working: "NA"
+    file: "backend/routes/cafe_routes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Route POST /api/cafe/sessions - à tester"
+
+  - task: "API ajout de messages"
+    implemented: true
+    working: false
+    file: "backend/routes/cafe_routes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Route POST /api/cafe/messages - problème avec parsing des messages"
+
+  - task: "API modes orchestration (Pilote/Sommelier)"
+    implemented: true
+    working: "NA"
+    file: "backend/routes/cafe_routes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Routes GET /api/cafe/orchestration/* - à tester"
+
+frontend:
+  - task: "Bug React DOM lors changement de mode"
+    implemented: false
+    working: false
+    file: "frontend/src/context/CafeContext.js, frontend/src/components/Sidebar.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Erreur 'removeChild on Node' lors du passage en mode Pilote ou Sommelier. Probablement lié à un re-render avec accès à formatted_message undefined"
+
+  - task: "Affichage des messages dans Timeline"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/Timeline.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Composant Timeline - à tester"
+
+  - task: "Création de session via SessionModal"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/SessionModal.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Modal de création de session - à tester"
+
+  - task: "Composer - envoi de messages"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/Composer.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Composant Composer avec sélection mode/café - à tester"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: true
+
+test_plan:
+  current_focus:
+    - "Gestion des messages mal formatés (erreur 422)"
+    - "Bug React DOM lors changement de mode"
+    - "API création de session"
+    - "API ajout de messages"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Fichier test_result.md initialisé. Problèmes identifiés: erreur 422 backend et bug React DOM frontend. Je vais maintenant corriger ces problèmes avant de lancer les tests."

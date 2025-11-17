@@ -12,7 +12,7 @@ export const AlertsPanel = () => {
 
   // Moments Oracle
   const oracleMessages = activeSession.messages?.filter(
-    m => m.formatted_message.state === 'oracle'
+    m => m.formatted_message && m.formatted_message.state === 'oracle'
   ) || [];
 
   return (

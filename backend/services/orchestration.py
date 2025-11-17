@@ -304,6 +304,7 @@ class OrchestrationService:
             recent_states = [
                 m.formatted_message.state 
                 for m in session.messages[-len(session.config.participants):]
+                if m.formatted_message  # Seulement les messages bien formatés
             ]
             if recent_states and all(s == Mem4RistorState.CERTITUDE for s in recent_states):
                 return True

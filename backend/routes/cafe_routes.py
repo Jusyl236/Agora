@@ -194,6 +194,10 @@ async def get_suggestion(session_id: str, message_id: str):
     if not message:
         raise HTTPException(404, "Message introuvable")
     
+    # Vérifie que le message a un formatted_message
+    if not message.formatted_message:
+        return None
+    
     suggestion = orchestration_service.suggest_next_action(session, message)
     return suggestion
 

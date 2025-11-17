@@ -258,3 +258,5 @@ agent_communication:
     message: "Fichier test_result.md initialisé. Problèmes identifiés: erreur 422 backend et bug React DOM frontend. Je vais maintenant corriger ces problèmes avant de lancer les tests."
   - agent: "main"
     message: "✅ Corrections terminées. Backend : formatted_message rendu optionnel, gestion des cas où parsing échoue. Frontend : ajout de vérifications de sécurité (optional chaining) dans Timeline, Sidebar et CafeContext. Prêt pour les tests backend."
+  - agent: "testing"
+    message: "✅ TESTS BACKEND TERMINÉS ET RÉUSSIS (8/8). Corrections supplémentaires appliquées: session_service.py et orchestration.py pour gérer formatted_message=None. Toutes les routes critiques du Café Virtuel fonctionnent: création session, ajout messages (bien/mal formatés), récupération sessions, orchestration Pilote/Sommelier. Prêt pour tests frontend ou finalisation."

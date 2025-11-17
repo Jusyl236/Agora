@@ -245,10 +245,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Gestion des messages mal formatés (erreur 422)"
     - "Bug React DOM lors changement de mode"
-    - "API création de session"
-    - "API ajout de messages"
+    - "Affichage des messages dans Timeline"
+    - "Création de session via SessionModal"
+    - "Composer - envoi de messages"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

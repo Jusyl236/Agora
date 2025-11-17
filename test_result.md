@@ -160,15 +160,18 @@ backend:
 
   - task: "API modes orchestration (Pilote/Sommelier)"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/routes/cafe_routes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Routes GET /api/cafe/orchestration/* - à tester"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTÉ: Routes d'orchestration fonctionnent. GET /api/cafe/orchestration/suggest/{session_id}/{message_id} retourne suggestions pour messages bien formatés, None pour mal formatés. GET /api/cafe/orchestration/next-ia/{session_id} retourne prochaine IA en mode Pilote. Correction appliquée dans orchestration.py pour gérer formatted_message=None."
 
 frontend:
   - task: "Bug React DOM lors changement de mode"

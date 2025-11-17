@@ -181,6 +181,10 @@ class OrchestrationService:
     ) -> Optional[OrchestrationSuggestion]:
         """Mode Sommelier : suggère la prochaine action"""
         
+        # Vérification de sécurité
+        if not latest_message.formatted_message:
+            return None
+            
         state = latest_message.formatted_message.state
         from_ia = latest_message.from_ia
         
@@ -264,8 +268,8 @@ class OrchestrationService:
             if q.target_ia and q.target_ia != "Julien":
                 return q.target_ia
         
-        # Si état Recherche → Perplexity
-        if latest_message.formatted_message.state == Mem4RistorState.RECHERCHE:
+        # Si état Recherche → Perplexity (seulement si message bien formaté)
+        if latest_message.formatted_message and latest_message.formatted_message.state == Mem4RistorState.RECHERCHE:
             if any(p.name == "Perplexity" and p.is_available for p in session.config.participants):
                 return "Perplexity"
         
@@ -300,6 +304,7 @@ class OrchestrationService:
             recent_states = [
                 m.formatted_message.state 
                 for m in session.messages[-len(session.config.participants):]
+                if m.formatted_message  # Seulement les messages bien formatés
             ]
             if recent_states and all(s == Mem4RistorState.CERTITUDE for s in recent_states):
                 return True

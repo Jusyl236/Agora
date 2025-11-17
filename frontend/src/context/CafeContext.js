@@ -107,8 +107,11 @@ export const CafeProvider = ({ children }) => {
       // Si mode Sommelier ou Pilote, obtenir suggestion/prochaine IA
       if (orchestrationMode === 'sommelier' && updatedSession.messages.length > 0) {
         const lastMessage = updatedSession.messages[updatedSession.messages.length - 1];
-        const sugg = await cafeApi.getSuggestion(activeSession.id, lastMessage.id);
-        setSuggestion(sugg);
+        // Vérifier que le message a un formatted_message avant d'appeler getSuggestion
+        if (lastMessage.formatted_message) {
+          const sugg = await cafeApi.getSuggestion(activeSession.id, lastMessage.id);
+          setSuggestion(sugg);
+        }
       } else if (orchestrationMode === 'pilote' && updatedSession.messages.length > 0) {
         const nextIA = await cafeApi.getNextIA(activeSession.id);
         if (nextIA) {

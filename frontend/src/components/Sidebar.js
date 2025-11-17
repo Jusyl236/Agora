@@ -32,7 +32,7 @@ export const AlertsPanel = () => {
 
   // Messages marqués "Oracle" (breakthrough rare)
   const oracleMessages = activeSession.messages?.filter(
-    m => m.formatted_message.state === 'oracle'
+    m => m.formatted_message && m.formatted_message.state === 'oracle'
   ) || [];
 
   return (
@@ -79,10 +79,10 @@ export const AlertsPanel = () => {
             {oracleMessages.slice(-3).map((msg, i) => (
               <div key={i} className="bg-purple-50 rounded p-2 text-xs">
                 <div className="font-medium text-purple-900">
-                  {msg.formatted_message.ia_name}
+                  {msg.formatted_message?.ia_name || msg.from_ia}
                 </div>
                 <div className="text-purple-700 truncate">
-                  {msg.formatted_message.content.substring(0, 50)}...
+                  {msg.formatted_message?.content?.substring(0, 50) || msg.raw_content.substring(0, 50)}...
                 </div>
               </div>
             ))}
@@ -324,16 +324,22 @@ export const DebugURLPanel = () => {
         🐛 DEBUG - URLs des Conversations
       </h3>
 
-      {Object.entries(urls).map(([iaName, url]) => (
-        <div key={iaName} className="mb-3 p-2 bg-gray-50 rounded">
-          <label className="block text-sm font-bold text-gray-700 mb-1">{iaName}</label>
-          <input
-            type="text"
-            value={url}
-            onChange={(e) => handleUrlChange(iaName, e.target.value)}
-            placeholder={`Coller l'URL de ${iaName} ici...`}
-            className="w-full bg-white text-gray-900 p-2 rounded border border-gray-300 text-xs"
-          />
+      {messagesWithQuestions.length === 0 ? (
+        <div className="text-sm text-gray-500 text-center py-4">
+          Aucune question détectée
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {messagesWithQuestions.slice(-5).map((msg, i) => (
+            <div key={i} className="bg-blue-50 rounded p-3 text-sm">
+              <div className="font-medium text-blue-900 mb-1">
+                De: {msg.formatted_message?.ia_name || msg.from_ia}
+              </div>
+              <div className="text-blue-700 text-xs">
+                {msg.detected_questions[0]}
+              </div>
+            </div>
+          ))}
         </div>
       ))}
 

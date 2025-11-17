@@ -65,7 +65,7 @@ class Message(BaseModel):
     session_id: str
     from_ia: str  # Nom de l'IA source
     to_ia: Optional[str] = None  # Destinataire (si spécifié)
-    formatted_message: MessageFormat
+    formatted_message: Optional[MessageFormat] = None  # Optionnel si parsing échoue
     raw_content: str  # Contenu brut capturé
     timestamp: datetime = Field(default_factory=datetime.now)
     is_human: bool = False  # True si message de Julien

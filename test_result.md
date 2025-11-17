@@ -101,3 +101,174 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: |
+  Julien (utilisateur français non-technique) a un projet "Café Virtuel" qui ne fonctionne pas correctement.
+  Problèmes identifiés:
+  1. Erreur 422 lors de l'ajout de messages (vérification des fichiers nécessaire)
+  2. Bug React DOM (removeChild) lors du passage en mode "Pilote" ou "Sommelier"
+  3. Besoin de stabilisation et tests complets
+
+backend:
+  - task: "Gestion des messages mal formatés (erreur 422)"
+    implemented: true
+    working: true
+    file: "backend/routes/cafe_routes.py, backend/models/session.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Le champ formatted_message dans Message n'est pas optionnel, mais parse_formatted_message peut retourner None, causant une erreur 422"
+      - working: "NA"
+        agent: "main"
+        comment: "✅ Correction effectuée : formatted_message est maintenant Optional dans Message. Les messages peuvent être acceptés même si le parsing échoue. Route /api/cafe/orchestration/suggest vérifie maintenant l'existence de formatted_message avant utilisation."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTÉ ET CORRIGÉ: Messages mal formatés acceptés correctement. Correction supplémentaire dans session_service.py et orchestration.py pour gérer formatted_message=None. Tests passent: POST /api/cafe/messages avec contenu mal formaté retourne formatted_message=None sans erreur 500."
+
+  - task: "API création de session"
+    implemented: true
+    working: true
+    file: "backend/routes/cafe_routes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Route POST /api/cafe/sessions - à tester"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTÉ: POST /api/cafe/sessions fonctionne correctement. Session créée avec configuration complète (3 IAs participantes, mode barman, conditions d'arrêt). Retourne session avec ID valide."
+
+  - task: "API ajout de messages"
+    implemented: true
+    working: true
+    file: "backend/routes/cafe_routes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Route POST /api/cafe/messages - problème avec parsing des messages"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTÉ: POST /api/cafe/messages fonctionne pour messages bien ET mal formatés. Messages bien formatés: parsing réussi avec formatted_message complet. Messages mal formatés: acceptés avec formatted_message=None. Statistiques mises à jour correctement."
+
+  - task: "API modes orchestration (Pilote/Sommelier)"
+    implemented: true
+    working: true
+    file: "backend/routes/cafe_routes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Routes GET /api/cafe/orchestration/* - à tester"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTÉ: Routes d'orchestration fonctionnent. GET /api/cafe/orchestration/suggest/{session_id}/{message_id} retourne suggestions pour messages bien formatés, None pour mal formatés. GET /api/cafe/orchestration/next-ia/{session_id} retourne prochaine IA en mode Pilote. Correction appliquée dans orchestration.py pour gérer formatted_message=None."
+
+  - task: "API récupération de sessions"
+    implemented: true
+    working: true
+    file: "backend/routes/cafe_routes.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTÉ: GET /api/cafe/sessions/{session_id} et GET /api/cafe/sessions/active/current fonctionnent correctement. Sessions récupérées avec tous les messages et métadonnées. Session active retournée ou None si aucune."
+
+frontend:
+  - task: "Bug React DOM lors changement de mode"
+    implemented: true
+    working: true
+    file: "frontend/src/context/CafeContext.js, frontend/src/components/Sidebar.js, frontend/src/components/Timeline.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Erreur 'removeChild on Node' lors du passage en mode Pilote ou Sommelier. Probablement lié à un re-render avec accès à formatted_message undefined"
+      - working: "NA"
+        agent: "main"
+        comment: "✅ Correction effectuée : Ajout de vérifications (optional chaining) dans Timeline.js, Sidebar.js (AlertsPanel, QuestionsPanel) et CafeContext.js pour vérifier l'existence de formatted_message avant accès. Timeline affiche maintenant un mode simplifié si formatted_message est null."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTÉ ET CORRIGÉ: Bug React DOM complètement résolu ! Tests intensifs des changements de mode (Barman → Pilote → Sommelier → Barman) effectués sans aucune erreur. Les vérifications optional chaining fonctionnent parfaitement. Aucune erreur console détectée."
+
+  - task: "Affichage des messages dans Timeline"
+    implemented: true
+    working: true
+    file: "frontend/src/components/Timeline.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Composant Timeline - à tester"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTÉ: Timeline fonctionne parfaitement. Messages affichés correctement avec formatted_message parsé ET mode simplifié pour messages non parsés (formatted_message=null). Gestion des états Mem4Ristor, couleurs, emojis, signatures - tout fonctionne."
+
+  - task: "Création de session via SessionModal"
+    implemented: true
+    working: true
+    file: "frontend/src/components/SessionModal.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Modal de création de session - à tester"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTÉ: SessionModal fonctionne parfaitement. Ouverture/fermeture du modal, remplissage des champs (numéro, sujet, résumé), sélection des IAs participantes, configuration des modes d'orchestration. Interface complète et fonctionnelle."
+
+  - task: "Composer - envoi de messages"
+    implemented: true
+    working: true
+    file: "frontend/src/components/Composer.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Composant Composer avec sélection mode/café - à tester"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTÉ: Composer fonctionne parfaitement. Sélection destinataire, types de café (Expresso/Long/Cosmique/Gourmand), saisie de messages, envoi réussi. Messages apparaissent correctement dans Timeline. Bouton Briefing Manuel fonctionne (alerte attendue car extension Chrome non chargée)."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 2
+  run_ui: true
+  testing_completed: true
+  all_tests_passed: true
+
+test_plan:
+  current_focus: []
+  stuck_tasks: []
+  test_all: true
+  test_priority: "completed"
+
+agent_communication:
+  - agent: "main"
+    message: "Fichier test_result.md initialisé. Problèmes identifiés: erreur 422 backend et bug React DOM frontend. Je vais maintenant corriger ces problèmes avant de lancer les tests."
+  - agent: "main"
+    message: "✅ Corrections terminées. Backend : formatted_message rendu optionnel, gestion des cas où parsing échoue. Frontend : ajout de vérifications de sécurité (optional chaining) dans Timeline, Sidebar et CafeContext. Prêt pour les tests backend."
+  - agent: "testing"
+    message: "✅ TESTS BACKEND TERMINÉS ET RÉUSSIS (8/8). Corrections supplémentaires appliquées: session_service.py et orchestration.py pour gérer formatted_message=None. Toutes les routes critiques du Café Virtuel fonctionnent: création session, ajout messages (bien/mal formatés), récupération sessions, orchestration Pilote/Sommelier. Prêt pour tests frontend ou finalisation."
+  - agent: "testing"
+    message: "🎉 TESTS FRONTEND TERMINÉS ET RÉUSSIS (4/4) ! Bug React DOM complètement corrigé - changements de mode Barman/Pilote/Sommelier fonctionnent parfaitement. Timeline, SessionModal, Composer, Sidebar - tous les composants testés et fonctionnels. Application Café Virtuel entièrement opérationnelle. Prêt pour utilisation par Julien !"

@@ -54,6 +54,34 @@ const Timeline = () => {
       <div className="space-y-4">
         {messages.map((msg, index) => {
           const fm = msg.formatted_message;
+          
+          // Si le message n'a pas été parsé, afficher en mode simple
+          if (!fm) {
+            return (
+              <div
+                key={msg.id || index}
+                className="bg-white rounded-lg p-4 shadow-sm border-l-4 hover:shadow-md transition-shadow border-l-gray-400"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-gray-900">{msg.from_ia}</span>
+                    {msg.is_human && (
+                      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                        👤 Julien (Le Barman)
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    {new Date(msg.timestamp).toLocaleTimeString('fr-FR')}
+                  </span>
+                </div>
+                <div className="prose prose-sm max-w-none text-gray-800 leading-relaxed whitespace-pre-wrap">
+                  {msg.raw_content}
+                </div>
+              </div>
+            );
+          }
+          
           const stateColor = STATE_COLORS[fm.state] || '#6b7280';
           const stateEmoji = STATE_EMOJIS[fm.state] || '⚪';
 

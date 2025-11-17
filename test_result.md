@@ -232,3 +232,5 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "Fichier test_result.md initialisé. Problèmes identifiés: erreur 422 backend et bug React DOM frontend. Je vais maintenant corriger ces problèmes avant de lancer les tests."
+  - agent: "main"
+    message: "✅ Corrections terminées. Backend : formatted_message rendu optionnel, gestion des cas où parsing échoue. Frontend : ajout de vérifications de sécurité (optional chaining) dans Timeline, Sidebar et CafeContext. Prêt pour les tests backend."

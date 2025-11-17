@@ -188,11 +188,11 @@ backend:
 frontend:
   - task: "Bug React DOM lors changement de mode"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/context/CafeContext.js, frontend/src/components/Sidebar.js, frontend/src/components/Timeline.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
@@ -200,42 +200,54 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: "✅ Correction effectuée : Ajout de vérifications (optional chaining) dans Timeline.js, Sidebar.js (AlertsPanel, QuestionsPanel) et CafeContext.js pour vérifier l'existence de formatted_message avant accès. Timeline affiche maintenant un mode simplifié si formatted_message est null."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTÉ ET CORRIGÉ: Bug React DOM complètement résolu ! Tests intensifs des changements de mode (Barman → Pilote → Sommelier → Barman) effectués sans aucune erreur. Les vérifications optional chaining fonctionnent parfaitement. Aucune erreur console détectée."
 
   - task: "Affichage des messages dans Timeline"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/components/Timeline.js"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Composant Timeline - à tester"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTÉ: Timeline fonctionne parfaitement. Messages affichés correctement avec formatted_message parsé ET mode simplifié pour messages non parsés (formatted_message=null). Gestion des états Mem4Ristor, couleurs, emojis, signatures - tout fonctionne."
 
   - task: "Création de session via SessionModal"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/components/SessionModal.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Modal de création de session - à tester"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTÉ: SessionModal fonctionne parfaitement. Ouverture/fermeture du modal, remplissage des champs (numéro, sujet, résumé), sélection des IAs participantes, configuration des modes d'orchestration. Interface complète et fonctionnelle."
 
   - task: "Composer - envoi de messages"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/components/Composer.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Composant Composer avec sélection mode/café - à tester"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTÉ: Composer fonctionne parfaitement. Sélection destinataire, types de café (Expresso/Long/Cosmique/Gourmand), saisie de messages, envoi réussi. Messages apparaissent correctement dans Timeline. Bouton Briefing Manuel fonctionne (alerte attendue car extension Chrome non chargée)."
 
 metadata:
   created_by: "main_agent"

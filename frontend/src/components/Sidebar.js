@@ -59,10 +59,10 @@ export const AlertsPanel = () => {
             {oracleMessages.slice(-3).map((msg, i) => (
               <div key={i} className="bg-purple-50 rounded p-2 text-xs">
                 <div className="font-medium text-purple-900">
-                  {msg.formatted_message.ia_name}
+                  {msg.formatted_message?.ia_name || msg.from_ia}
                 </div>
                 <div className="text-purple-700 truncate">
-                  {msg.formatted_message.content.substring(0, 50)}...
+                  {msg.formatted_message?.content?.substring(0, 50) || msg.raw_content.substring(0, 50)}...
                 </div>
               </div>
             ))}

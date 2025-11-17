@@ -256,14 +256,10 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus:
-    - "Bug React DOM lors changement de mode"
-    - "Affichage des messages dans Timeline"
-    - "Création de session via SessionModal"
-    - "Composer - envoi de messages"
+  current_focus: []
   stuck_tasks: []
-  test_all: false
-  test_priority: "high_first"
+  test_all: true
+  test_priority: "completed"
 
 agent_communication:
   - agent: "main"
@@ -272,3 +268,5 @@ agent_communication:
     message: "✅ Corrections terminées. Backend : formatted_message rendu optionnel, gestion des cas où parsing échoue. Frontend : ajout de vérifications de sécurité (optional chaining) dans Timeline, Sidebar et CafeContext. Prêt pour les tests backend."
   - agent: "testing"
     message: "✅ TESTS BACKEND TERMINÉS ET RÉUSSIS (8/8). Corrections supplémentaires appliquées: session_service.py et orchestration.py pour gérer formatted_message=None. Toutes les routes critiques du Café Virtuel fonctionnent: création session, ajout messages (bien/mal formatés), récupération sessions, orchestration Pilote/Sommelier. Prêt pour tests frontend ou finalisation."
+  - agent: "testing"
+    message: "🎉 TESTS FRONTEND TERMINÉS ET RÉUSSIS (4/4) ! Bug React DOM complètement corrigé - changements de mode Barman/Pilote/Sommelier fonctionnent parfaitement. Timeline, SessionModal, Composer, Sidebar - tous les composants testés et fonctionnels. Application Café Virtuel entièrement opérationnelle. Prêt pour utilisation par Julien !"

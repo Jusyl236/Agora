@@ -10,6 +10,19 @@ from typing import List
 import uuid
 from datetime import datetime, timezone
 
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    client.close()   # remplace 'client' par le nom réel de ton objet de connexion
+
+app = FastAPI(
+    title="Café Virtuel API",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
 # Import Café Virtuel routes
 from routes.cafe_routes import router as cafe_router, init_services
 
@@ -25,8 +38,6 @@ db = client[os.environ['DB_NAME']]
 # Initialize Café Virtuel services
 init_services(db)
 
-# Create the main app without a prefix
-app = FastAPI(title="Café Virtuel API", version="1.0.0")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -91,6 +102,3 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
